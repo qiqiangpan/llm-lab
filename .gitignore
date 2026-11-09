@@ -1,3 +1,13 @@
+# IDE 配置文件夹
+.idea/
+
+# Datasets
+LoRA/code/sms_spam_collection
+LoRA/code/sms_spam_collection.zip
+LoRA/code/test.csv
+LoRA/code/train.csv
+LoRA/code/validation.csv
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
