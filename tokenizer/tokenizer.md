@@ -38,7 +38,7 @@ def get_encoding(encoding_name: str) -> Encoding:
         ENCODINGS[encoding_name] = enc
         return enc
 ```
-> tokenizer 为一个实例化的 `Encoding` 类
+> tokenizer 为一个实例化的 `Encoding` 对象
 
 ## 实现 Encoding 类的 `encode()` 方法
 
