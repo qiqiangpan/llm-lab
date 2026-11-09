@@ -150,3 +150,43 @@ def load_gpt2_params_from_tf_ckpt(ckpt_path, settings):
         target_dict[last_key] = variable_array
 
     return params
+
+'''
+params = {
+    "wte": ...,  # token embedding
+    "wpe": ...,  # position embedding
+
+    "ln_f": {
+        "g": ...,
+        "b": ...,
+    },
+
+    "blocks": [
+        {
+            "attn": {
+                "c_attn": {
+                    "w": ...,
+                    "b": ...,
+                },
+                "c_proj": {
+                    "w": ...,
+                    "b": ...,
+                },
+            },
+            "mlp": {
+                "c_fc": {
+                    "w": ...,
+                    "b": ...,
+                },
+                "c_proj": {
+                    "w": ...,
+                    "b": ...,
+                },
+            },
+            # 还可能包含该层的归一化参数
+        },
+        # 后续各层……
+    ],
+}
+其中的 ... 是 NumPy 数组
+'''
