@@ -460,7 +460,7 @@ class SpamDataset(Dataset):
 
 
 @torch.no_grad()  # Disable gradient tracking for efficiency
-def calc_accuracy_loader(data_loader, model, device, num_batches=None):
+def calc_accuracy_loader(data_loader, model, device, num_batches=None): # num_batches: 限制只跑多少个 batch；若 `num_batches=None` 表示跑完整个数据集
     model.eval()
     correct_predictions, num_examples = 0, 0
 
