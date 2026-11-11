@@ -490,8 +490,8 @@ def calc_loss_batch(input_batch, target_batch, model, device):
 
 # Overall the same as `train_model_simple` in chapter 5
 def train_classifier_simple(model, train_loader, val_loader, optimizer, device, num_epochs,
-                            eval_freq, eval_iter):
-    # Initialize lists to track losses and tokens seen
+                            eval_freq, eval_iter): # eval_iter: 评估的时候，不跑完全集，只跑 `eval_iter` 个 batchs（提速，抽样评估）
+    # Initialize lists to track losses and examples seen
     train_losses, val_losses, train_accs, val_accs = [], [], [], []
     examples_seen, global_step = 0, -1
 
