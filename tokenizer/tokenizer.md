@@ -1,5 +1,15 @@
-# tokenizer 的底层代码实现
-## 实例化 tokenizer 
+# tokenizer
+## 前置知识
+1. Unicode
+    - Unicode 是**字符编码标准**。
+    - 其中，Unicode 字符集为世界上的文字、符号和表情符号分配统一编号（码点）；
+    - Unicode 编码方案（UTF）规定其编码表示方式（如 UTF-8）
+2. 二进制：是传输数据的形式，计算机底层只认识 0 和 1，所有数据（文字、图片、程序）最终都要表示成二进制位（bit）
+3. 字节：是计算机存储和传输的基本单位，1 字节（byte）= 8 个二进制位（bit）
+
+
+## tokenizer 的底层代码实现
+### 实例化 tokenizer 
 
 ```python
 import tiktoken
@@ -8,7 +18,7 @@ tokenizer = tiktoken.get_encoding("gpt2")
 print(tokenizer.encode("<|endoftext|>", allowed_special={"<|endoftext|>"}))
 ```
 
-## 实现 `tiktoken.get_encoding()` 方法
+### 实现 `tiktoken.get_encoding()` 方法
 
 ```python
 def get_encoding(encoding_name: str) -> Encoding:
@@ -40,7 +50,7 @@ def get_encoding(encoding_name: str) -> Encoding:
 ```
 > tokenizer 为一个实例化的 `Encoding` 对象
 
-## 实现 Encoding 类的 `encode()` 方法
+### 实现 Encoding 类的 `encode()` 方法
 
 ```python
     def encode(
@@ -104,4 +114,4 @@ def get_encoding(encoding_name: str) -> Encoding:
 >   - `.core_bpe`: 是 `Encoding` 类实例对象的属性，属性值为 `CoreBPE` 类实例化的对象, `self._core_bpe = _tiktoken.CoreBPE(mergeable_ranks, special_tokens, pat_str)`
 >   - `.encode()`: 是 `CoreBPE` 类实例对象的方法(即 BPE 算法)，底层由 `rust` 语言实现
 
-## 实现 `._core_bpe.encode()` 方法（**待补充**）
+### 实现 `._core_bpe.encode()` 方法（**待补充**）
