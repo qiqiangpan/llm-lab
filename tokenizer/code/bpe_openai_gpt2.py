@@ -27,20 +27,16 @@
 
 import os
 import json
-import regex as re # `regex` 是第三方库，不是 Python 自带的 `re` 库
+import regex as re
 import requests
 from tqdm import tqdm
 from functools import lru_cache 
-# `lru` : Least Recently Used;
-# `functools.lru_cache()`: 是一个装饰器工厂，接收配置参数，返回一个装饰器，然后再用这个装饰器去处理函数；
-# 返回的装饰器给函数加一个“最近最少使用”缓存（LRU cache），把函数的返回值按参数缓存起来；
-# 以后用相同参数调用时，直接返回缓存结果，不再重新执行函数。
 
 
 @lru_cache()
 def bytes_to_unicode():
     """
-    Returns list of utf-8 byte and a corresponding list of unicode strings.
+    Returns list of utf-8 byte and a corresponding list of unicode strings. 
     The reversible bpe codes work on unicode strings.
     This means you need a large #(number) of unicode characters in your vocab if you want to avoid UNKs.
     When you're at something like a 10B token dataset you end up needing around 5K for decent coverage.
@@ -48,7 +44,7 @@ def bytes_to_unicode():
     To avoid that, we want lookup tables between utf-8 bytes and unicode strings.
     And avoids mapping to whitespace/control characters the bpe code barfs on.
     """
-    bs = list(range(ord("!"), ord("~") + 1)) + list(range(ord("¡"), ord("¬") + 1)) + list(range(ord("®"), ord("ÿ") + 1))
+    bs = list(range(ord("!"), ord("~") + 1)) + list(range(ord("¡"), ord("¬") + 1)) + list(range(ord("®"), ord("ÿ") + 1)) # ord(): 返回单个字符对应的 Unicode 码点（十进制整数）
     cs = bs[:]
     n = 0
     for b in range(2**8):
@@ -56,8 +52,8 @@ def bytes_to_unicode():
             bs.append(b)
             cs.append(2**8 + n)
             n += 1
-    cs = [chr(n) for n in cs]
-    return dict(zip(bs, cs))
+    cs = [chr(n) for n in cs] # chr(): 把十进制整数（Unicode 码点）转换成对应的单个字符
+    return dict(zip(bs, cs)) # byte --> unicode 字符
 
 
 def get_pairs(word):
