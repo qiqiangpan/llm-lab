@@ -74,8 +74,8 @@ class MultiHeadAttention(nn.Module):
 
         ####################################################
         # NEW
-        num_tokens_Q = queries.shape[-2]
-        num_tokens_K = keys.shape[-2]
+        num_tokens_Q = queries.shape[-2] # num_tokens
+        num_tokens_K = keys.shape[-2] # num_tokens3
         if use_cache:
             mask_bool = self.mask.bool()[
                 self.ptr_current_pos:self.ptr_current_pos + num_tokens_Q, :num_tokens_K
