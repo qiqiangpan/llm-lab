@@ -84,14 +84,108 @@ self.current_pos = 0
 ####################################################
 ```
 
-> **Note**  
-> 1. 非 `use_cache` 版本中使用的 `nn.Sequential()`, 为什么 `use_cache` 版本要使用 `nn.ModuleList()` 呢？
-
 - Then, we replace the one-liner block call with an explicit loop, passing use_cache through each transformer block:
 
 ```python
+def forward(self, in_idx, use_cache=False):
+    batch_size, seq_len = in_idx.shape
+    tok_embeds = self.tok_emb(in_idx) # tok_embeds 的 shape: [batch_size, seq_len, emb_dim]
 
+    # pos_embeds = self.pos_emb(torch.arange(seq_len, device=in_idx.device))
+
+    ####################################################
+    # NEW
+
+    if use_cache:
+        pos_ids = torch.arange(self.current_pos, self.current_pos + seq_len, device=in_idx.device, dtype=torch.long)
+        self.current_pos += seq_len
+    else:
+        pos_ids = torch.arange(0, seq_len, device=in_idx.device, dtype=torch.long)
+    pos_embeds = self.pos_emb(pos_ids).unsqueeze(0)
+    ####################################################
+
+    x = tok_embeds + pos_embeds  # Shape [batch_size, num_tokens, emb_size]
+    x = self.drop_emb(x)
+
+    # x = self.trf_blocks(x)
+    ####################################################
+    # NEW
+    for blk in self.trf_blocks:
+        x = blk(x, use_cache=use_cache)
+    ####################################################
+
+    x = self.final_norm(x)
+    logits = self.out_head(x)
+    return logits
 ```
+
+- The above change then also requires a small modification to the `TransformerBlock` class to accept the `use_cache` argument:
+
+```python
+def forward(self, x, use_cache=False):
+    # Shortcut connection for attention block
+    shortcut = x
+    x = self.norm1(x)
+
+    # x = self.att(x)   # Shape [batch_size, num_tokens, emb_size]
+    ####################################################
+    # NEW
+    x = self.att(x, use_cache=use_cache)
+    ####################################################
+```
+
+- Lastly, we add a model-level reset to GPTModel to clear all block caches at once for our convenience:
+
+```python
+def forward(self, in_idx, use_cache=False):
+    # ...
+    ####################################################
+    # NEW
+    def reset_kv_cache(self):
+        for blk in self.trf_blocks:
+            blk.att.reset_cache()
+        self.current_pos = 0
+    ####################################################
+```
+
+## 5. Using the Cache in Generation
+With the changes to the `GPTModel`, `TransformerBlock`, and `MultiHeadAttention`, finally, here's how we use the KV cache in a simple text generation function:
+
+```python
+####################################################
+# NEW
+def generate_text_simple_cached(model, idx, max_new_tokens,
+                                context_size=None, use_cache=True):
+    model.eval()
+    ctx_len = context_size or model.pos_emb.num_embeddings
+
+    with torch.no_grad():
+        if use_cache:
+            # Init cache with full prompt 
+            # Prefill 阶段
+            model.reset_kv_cache()
+            logits = model(idx[:, -ctx_len:], use_cache=True)
+
+            # Decode 阶段
+            for _ in range(max_new_tokens):
+                # a) pick the token with the highest log-probability (greedy sampling)
+                next_idx = logits[:, -1].argmax(dim=-1, keepdim=True)
+                # b) append it to the running sequence
+                idx = torch.cat([idx, next_idx], dim=1)
+                # c) feed model only the new token
+                logits = model(next_idx, use_cache=True)
+        else:
+            for _ in range(max_new_tokens):
+                logits = model(idx[:, -ctx_len:], use_cache=False)
+                next_idx = logits[:, -1].argmax(dim=-1, keepdim=True)
+                idx = torch.cat([idx, next_idx], dim=1)
+
+    return idx
+####################################################
+```
+
+> **Note**  
+> we only feed the model the new token in c) via `logits = model(next_idx, use_cache=True)`. Without caching, we feed the model the whole input `logits = model(idx[:, -ctx_len:], use_cache=False)` as it has no stored keys and values to reuse.
 
 ## Other modifications
 we extend the `forward` method of the `MultiHeadAttention` class, 让 causal attention mask matrix 适配 use_cache 版本
